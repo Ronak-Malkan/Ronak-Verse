@@ -22,7 +22,7 @@ echo "Creating NGINX configurations..."
 
 # Main site
 # Copy an existing configuration from your project setup for the main site
-sudo cp /root/Ronak-Verse/services/portfolio/nginx.conf /etc/nginx/sites-available/ronakverse.net
+sudo cp /root/Ronak-Verse/services/Gateway/nginx.conf /etc/nginx/sites-available/ronakverse.net
 sudo ln -s /etc/nginx/sites-available/ronakverse.net /etc/nginx/sites-enabled/
 
 # Service TwoCars
