@@ -2,8 +2,8 @@
 
 # Define the repository URL and the Docker container name
 REPO_URL="https://github.com/Ronak-Malkan/Gateway.git"
-CONTAINER_NAME="ronakverse-portfolio"
-IMAGE_NAME="ronakverse-portfolio-image"
+CONTAINER_NAME="gateway"
+IMAGE_NAME="gateway"
 
 # Stop any currently running container of the app
 echo "Stopping any existing Docker containers for the app..."
