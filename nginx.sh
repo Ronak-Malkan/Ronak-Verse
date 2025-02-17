@@ -20,19 +20,21 @@ sudo chown -R www-data:www-data /var/www/ronakverse.net
 # NGINX configuration for the main domain and services
 echo "Creating NGINX configurations..."
 
-# Main site
-# Copy an existing configuration from your project setup for the main site
-sudo cp /root/Ronak-Verse/services/Gateway/nginx.conf /etc/nginx/sites-available/ronakverse.net
-sudo ln -s /etc/nginx/sites-available/ronakverse.net /etc/nginx/sites-enabled/
+# Path to the main Nginx configuration file
+NGINX_CONF="/root/Ronak-Verse/nginx.conf"
+NGINX_AVAILABLE="/etc/nginx/sites-available/ronakverse.net"
+NGINX_ENABLED="/etc/nginx/sites-enabled/ronakverse.net"
 
-# # Service TwoCars
-sudo cp /root/Ronak-Verse/services/TwoCars/nginx.conf /etc/nginx/sites-available/twocars
-sudo ln -s /etc/nginx/sites-available/twocars /etc/nginx/sites-enabled/
-
-# # Service TypeItToLoseIt
-# # Same for this service
-sudo cp /root/Ronak-Verse/services/TypeItToLoseIt/nginx.conf /etc/nginx/sites-available/typeittoloseit
-sudo ln -s /etc/nginx/sites-available/typeittoloseit /etc/nginx/sites-enabled/
+# Ensure the main Nginx configuration file exists before copying
+if [ -f "$NGINX_CONF" ]; then
+    sudo cp "$NGINX_CONF" "$NGINX_AVAILABLE"
+    # Remove the symlink if it already exists to prevent conflicts
+    sudo rm -f "$NGINX_ENABLED"
+    sudo ln -s "$NGINX_AVAILABLE" "$NGINX_ENABLED"
+else
+    echo "Error: $NGINX_CONF not found!"
+    exit 1
+fi
 
 # Test Nginx configuration
 sudo nginx -t
