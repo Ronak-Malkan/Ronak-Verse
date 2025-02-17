@@ -23,7 +23,9 @@ docker build -t $IMAGE_NAME .
 
 # Run the Docker container
 echo "Running Docker container..."
-docker run -d --name $CONTAINER_NAME -p 8080:80 $IMAGE_NAME
+#docker run -d --name $CONTAINER_NAME -p 8080:80 $IMAGE_NAME
+docker run -d --restart unless-stopped -p 8000:80 --name $CONTAINER_NAME $IMAGE_NAME
+
 
 # Clean up the temporary files
 echo "Cleaning up..."
