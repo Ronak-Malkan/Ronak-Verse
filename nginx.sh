@@ -26,13 +26,13 @@ sudo cp /root/Ronak-Verse/services/Gateway/nginx.conf /etc/nginx/sites-available
 sudo ln -s /etc/nginx/sites-available/ronakverse.net /etc/nginx/sites-enabled/
 
 # # Service TwoCars
-# sudo cp /root/Ronak-Verse/services/TwoCars/nginx.conf /etc/nginx/sites-available/twocars
-# sudo ln -s /etc/nginx/sites-available/twocars /etc/nginx/sites-enabled/
+sudo cp /root/Ronak-Verse/services/TwoCars/nginx.conf /etc/nginx/sites-available/twocars
+sudo ln -s /etc/nginx/sites-available/twocars /etc/nginx/sites-enabled/
 
 # # Service TypeItToLoseIt
 # # Same for this service
-# sudo cp /root/Ronak-Verse/services/TypeItToLoseIt/nginx.conf /etc/nginx/sites-available/typeittoloseit
-# sudo ln -s /etc/nginx/sites-available/typeittoloseit /etc/nginx/sites-enabled/
+sudo cp /root/Ronak-Verse/services/TypeItToLoseIt/nginx.conf /etc/nginx/sites-available/typeittoloseit
+sudo ln -s /etc/nginx/sites-available/typeittoloseit /etc/nginx/sites-enabled/
 
 # Test Nginx configuration
 sudo nginx -t
