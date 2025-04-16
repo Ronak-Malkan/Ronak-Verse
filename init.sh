@@ -7,6 +7,7 @@ echo "Starting initial configuration..."
 ./services/Gateway/deploy.sh
 ./services/TwoCars/deploy.sh
 ./services/TypeItToLoseIt/deploy.sh
+./services/Portfolio/deploy.sh
 # ./database/deploy.sh
 ./nginx.sh
 echo "Configuration complete."
