@@ -1,0 +1,169 @@
+version: '3.8'
+
+# =============================================================================
+# Ronak-Verse Shared Database Infrastructure
+# =============================================================================
+# This docker-compose file manages shared infrastructure for ALL applications
+# on the Ronak-Verse droplet:
+# - PostgreSQL (shared database instance with multiple databases)
+# - Redis (shared cache and session store)
+# - RabbitMQ (shared message queue)
+#
+# Applications create their own databases within the PostgreSQL instance
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL - Shared Database Instance
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: ronak-verse-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: >
+      postgres
+      -c max_connections=50
+      -c shared_buffers=128MB
+      -c effective_cache_size=256MB
+      -c work_mem=2MB
+      -c maintenance_work_mem=32MB
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c wal_buffers=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=2GB
+    networks:
+      - ronak-verse-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 150M
+
+  # ===========================================================================
+  # Redis - Shared Cache and Session Store
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: ronak-verse-redis
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 50mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - redis_data:/data
+    networks:
+      - ronak-verse-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+        reservations:
+          memory: 30M
+
+  # ===========================================================================
+  # RabbitMQ - Shared Message Queue
+  # ===========================================================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ronak-verse-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management UI
+      - "15692:15692"  # Prometheus metrics
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VM_MEMORY_HIGH_WATERMARK=64MiB
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+      - ronak-verse-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 80M
+        reservations:
+          memory: 50M
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  ronak-verse-network:
+    external: true  # Must be created manually: docker network create ronak-verse-network
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+
+# =============================================================================
+# USAGE
+# =============================================================================
+# Initial setup (one-time):
+#   docker network create ronak-verse-network
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f postgres
+#   docker-compose logs -f redis
+#   docker-compose logs -f rabbitmq
+#
+# Restart services:
+#   docker-compose restart
+#
+# Stop services:
+#   docker-compose stop
+#
+# Access services:
+#   - PostgreSQL: localhost:5432 (postgres/<password>)
+#   - Redis: localhost:6379
+#   - RabbitMQ AMQP: localhost:5672
+#   - RabbitMQ Management: http://localhost:15672 (admin/<password>)
+#   - RabbitMQ Metrics: http://localhost:15692/metrics
+#
+# Backup database:
+#   docker exec ronak-verse-postgres pg_dumpall -U postgres > backup.sql
+#
+# Restore database:
+#   docker exec -i ronak-verse-postgres psql -U postgres < backup.sql

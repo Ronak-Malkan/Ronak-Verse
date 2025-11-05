@@ -1,0 +1,19 @@
+# =============================================================================
+# Grafana Dashboard Provisioning
+# =============================================================================
+# Automatically loads dashboards from this directory
+# =============================================================================
+
+apiVersion: 1
+
+providers:
+  - name: 'Ronak-Verse Dashboards'
+    orgId: 1
+    folder: 'Ronak-Verse'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true

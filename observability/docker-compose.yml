@@ -1,0 +1,188 @@
+version: '3.8'
+
+# =============================================================================
+# Ronak-Verse Observability Stack
+# =============================================================================
+# Provides monitoring, logging, and visualization for all applications:
+# - Prometheus: Metrics collection
+# - Grafana: Dashboards and visualization
+# - Loki: Log aggregation
+# - Promtail: Log shipping
+# - Exporters: PostgreSQL and Redis metrics
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PROMETHEUS - Metrics Collection
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ronak-verse-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - ronak-verse-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+        reservations:
+          memory: 30M
+
+  # ===========================================================================
+  # GRAFANA - Dashboards and Visualization
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ronak-verse-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=https://metrics.ronakverse.net
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+    networks:
+      - ronak-verse-network
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+        reservations:
+          memory: 30M
+
+  # ===========================================================================
+  # LOKI - Log Aggregation
+  # ===========================================================================
+  loki:
+    image: grafana/loki:latest
+    container_name: ronak-verse-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    networks:
+      - ronak-verse-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 40M
+        reservations:
+          memory: 25M
+
+  # ===========================================================================
+  # PROMTAIL - Log Shipper
+  # ===========================================================================
+  promtail:
+    image: grafana/promtail:latest
+    container_name: ronak-verse-promtail
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - ronak-verse-network
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  # ===========================================================================
+  # POSTGRES EXPORTER - PostgreSQL Metrics
+  # ===========================================================================
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: ronak-verse-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:${POSTGRES_PASSWORD}@ronak-verse-postgres:5432/postgres?sslmode=disable"
+    ports:
+      - "9187:9187"
+    networks:
+      - ronak-verse-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+        reservations:
+          memory: 10M
+
+  # ===========================================================================
+  # REDIS EXPORTER - Redis Metrics
+  # ===========================================================================
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: ronak-verse-redis-exporter
+    environment:
+      REDIS_ADDR: ronak-verse-redis:6379
+    ports:
+      - "9121:9121"
+    networks:
+      - ronak-verse-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+        reservations:
+          memory: 10M
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  ronak-verse-network:
+    external: true
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+
+# =============================================================================
+# USAGE
+# =============================================================================
+# Start observability stack:
+#   docker-compose up -d
+#
+# Access services:
+#   - Prometheus: http://localhost:9090
+#   - Grafana: http://localhost:3000 (admin/<password from .env>)
+#   - Loki: http://localhost:3100 (internal only)
+#
+# View logs:
+#   docker-compose logs -f grafana
+#   docker-compose logs -f prometheus
+#
+# Restart services:
+#   docker-compose restart grafana

@@ -1,0 +1,39 @@
+# =============================================================================
+# Grafana Datasources - Auto-provisioning
+# =============================================================================
+# Automatically configures Prometheus and Loki datasources in Grafana
+# =============================================================================
+
+apiVersion: 1
+
+datasources:
+  # ===========================================================================
+  # PROMETHEUS - Metrics
+  # ===========================================================================
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://ronak-verse-prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: '15s'
+      queryTimeout: '60s'
+      httpMethod: 'POST'
+
+  # ===========================================================================
+  # LOKI - Logs
+  # ===========================================================================
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://ronak-verse-loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # Extract trace ID from logs for correlation
+        - datasourceUid: tempo
+          matcherRegex: 'trace_id=(\w+)'
+          name: TraceID
+          url: '$${__value.raw}'

@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # =============================================================================
-# Ronak-Verse Database Infrastructure Deployment Script
+# Ronak-Verse Observability Stack Deployment Script
 # =============================================================================
-# Deploys shared infrastructure: PostgreSQL, Redis, RabbitMQ
+# Deploys monitoring and logging: Prometheus, Grafana, Loki, Promtail
 # =============================================================================
 
 set -e  # Exit on error
 
 echo "======================================================================"
-echo " Ronak-Verse Database Infrastructure Deployment"
+echo " Ronak-Verse Observability Stack Deployment"
 echo "======================================================================"
 echo ""
 
@@ -31,80 +31,79 @@ if [ ! -f "$SCRIPT_DIR/.env" ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# Create Docker network if it doesn't exist
+# Check if ronak-verse-network exists
 # ------------------------------------------------------------------------------
-echo "[1/5] Checking Docker network..."
+echo "[1/4] Checking Docker network..."
 if ! docker network inspect $NETWORK_NAME >/dev/null 2>&1; then
-    echo "Creating Docker network: $NETWORK_NAME"
-    docker network create $NETWORK_NAME
-    echo " Network created"
-else
-    echo " Network already exists"
+    echo "ERROR: Docker network '$NETWORK_NAME' does not exist!"
+    echo "Please run database/deploy.sh first to create the network."
+    exit 1
 fi
+echo "✓ Network exists"
 echo ""
 
 # ------------------------------------------------------------------------------
 # Stop existing containers (if any)
 # ------------------------------------------------------------------------------
-echo "[2/5] Stopping existing containers..."
+echo "[2/4] Stopping existing containers..."
 cd "$SCRIPT_DIR"
 docker-compose down 2>/dev/null || true
-echo " Stopped"
+echo "✓ Stopped"
 echo ""
 
 # ------------------------------------------------------------------------------
-# Start infrastructure services
+# Start observability services
 # ------------------------------------------------------------------------------
-echo "[3/5] Starting infrastructure services..."
+echo "[3/4] Starting observability services..."
 docker-compose up -d
-echo " Services started"
+echo "✓ Services started"
 echo ""
 
 # ------------------------------------------------------------------------------
 # Wait for services to be healthy
 # ------------------------------------------------------------------------------
-echo "[4/5] Waiting for services to be healthy..."
+echo "[4/4] Waiting for services to be healthy..."
 
-# Wait for PostgreSQL
-echo -n "  - PostgreSQL: "
+# Wait for Prometheus
+echo -n "  - Prometheus: "
 for i in {1..30}; do
-    if docker exec ronak-verse-postgres pg_isready -U postgres >/dev/null 2>&1; then
-        echo " Ready"
+    if curl -s http://localhost:9090/-/healthy >/dev/null 2>&1; then
+        echo "✓ Ready"
         break
     fi
     if [ $i -eq 30 ]; then
-        echo " Timeout waiting for PostgreSQL"
+        echo "✗ Timeout waiting for Prometheus"
         exit 1
     fi
     sleep 1
 done
 
-# Wait for Redis
-echo -n "  - Redis: "
+# Wait for Loki
+echo -n "  - Loki: "
 for i in {1..30}; do
-    if docker exec ronak-verse-redis redis-cli ping >/dev/null 2>&1; then
-        echo " Ready"
+    if curl -s http://localhost:3100/ready >/dev/null 2>&1; then
+        echo "✓ Ready"
         break
     fi
     if [ $i -eq 30 ]; then
-        echo " Timeout waiting for Redis"
+        echo "✗ Timeout waiting for Loki"
         exit 1
     fi
     sleep 1
 done
 
-# Wait for RabbitMQ
-echo -n "  - RabbitMQ: "
-for i in {1..60}; do
-    if docker exec ronak-verse-rabbitmq rabbitmq-diagnostics ping >/dev/null 2>&1; then
-        echo " Ready"
+# Wait for Grafana
+echo -n "  - Grafana: "
+for i in {1..30}; do
+    if curl -s http://localhost:3000/api/health >/dev/null 2>&1; then
+        echo "✓ Ready"
         break
     fi
-    if [ $i -eq 60 ]; then
-        echo " Timeout waiting for RabbitMQ"
+    if [ $i -eq 30 ]; then
+        echo "✗ Timeout waiting for Grafana"
         exit 1
     fi
-    sleep 2
+    sleep 1
 done
 
 echo ""
@@ -112,10 +111,10 @@ echo ""
 # ------------------------------------------------------------------------------
 # Display status and connection info
 # ------------------------------------------------------------------------------
-echo "[5/5] Deployment complete!"
+echo "Deployment complete!"
 echo ""
 echo "======================================================================"
-echo " Infrastructure Status"
+echo " Observability Stack Status"
 echo "======================================================================"
 echo ""
 
@@ -123,44 +122,39 @@ docker-compose ps
 
 echo ""
 echo "======================================================================"
-echo " Connection Information"
+echo " Access Information"
 echo "======================================================================"
 echo ""
-echo "PostgreSQL:"
-echo "  Host: localhost (or ronak-verse-postgres from containers)"
-echo "  Port: 5432"
-echo "  User: postgres"
-echo "  Password: (from .env file)"
-echo ""
-echo "Redis:"
-echo "  Host: localhost (or ronak-verse-redis from containers)"
-echo "  Port: 6379"
-echo "  No password required"
-echo ""
-echo "RabbitMQ:"
-echo "  AMQP: localhost:5672 (or ronak-verse-rabbitmq:5672)"
-echo "  Management UI: http://localhost:15672"
-echo "  Metrics: http://localhost:15692/metrics"
+echo "Grafana:"
+echo "  URL: http://localhost:3000"
+echo "  URL (external): http://$(hostname -I | awk '{print $1}'):3000"
 echo "  User: admin"
 echo "  Password: (from .env file)"
+echo ""
+echo "Prometheus:"
+echo "  URL: http://localhost:9090"
+echo "  URL (external): http://$(hostname -I | awk '{print $1}'):9090"
+echo ""
+echo "Loki:"
+echo "  URL: http://localhost:3100 (internal only)"
 echo ""
 echo "======================================================================"
 echo " Next Steps"
 echo "======================================================================"
 echo ""
-echo "1. Access RabbitMQ Management UI:"
-echo "   http://$(hostname -I | awk '{print $1}'):15672"
+echo "1. Access Grafana:"
+echo "   http://$(hostname -I | awk '{print $1}'):3000"
 echo ""
-echo "2. Check logs:"
-echo "   docker-compose logs -f postgres"
-echo "   docker-compose logs -f redis"
-echo "   docker-compose logs -f rabbitmq"
+echo "2. View Prometheus targets:"
+echo "   http://$(hostname -I | awk '{print $1}'):9090/targets"
 echo ""
-echo "3. Backup PostgreSQL:"
-echo "   docker exec ronak-verse-postgres pg_dumpall -U postgres > backup.sql"
+echo "3. Check logs:"
+echo "   docker-compose logs -f grafana"
+echo "   docker-compose logs -f prometheus"
+echo "   docker-compose logs -f loki"
 echo ""
-echo "4. Deploy applications (e.g., Puzzle):"
-echo "   cd ../services/Puzzle"
-echo "   ./deploy.sh"
+echo "4. Create dashboards in Grafana using:"
+echo "   - Datasource: Prometheus (metrics)"
+echo "   - Datasource: Loki (logs)"
 echo ""
 echo "======================================================================"

@@ -1,0 +1,122 @@
+# =============================================================================
+# Prometheus Configuration for Ronak-Verse
+# =============================================================================
+# Scrapes metrics from all applications and infrastructure components
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    cluster: 'ronak-verse-droplet'
+
+# =============================================================================
+# SCRAPE CONFIGURATIONS
+# =============================================================================
+scrape_configs:
+  # ---------------------------------------------------------------------------
+  # PUZZLE APPLICATION
+  # ---------------------------------------------------------------------------
+  - job_name: 'puzzle-api-gateway'
+    static_configs:
+      - targets: ['puzzle-api-gateway:8080']
+        labels:
+          application: 'puzzle'
+          service: 'api-gateway'
+
+  - job_name: 'puzzle-auth-service'
+    static_configs:
+      - targets: ['puzzle-auth-service:8001']
+        labels:
+          application: 'puzzle'
+          service: 'auth-service'
+
+  - job_name: 'puzzle-block-service'
+    static_configs:
+      - targets: ['puzzle-block-service:8002']
+        labels:
+          application: 'puzzle'
+          service: 'block-service'
+
+  - job_name: 'puzzle-blog-service'
+    static_configs:
+      - targets: ['puzzle-blog-service:8003']
+        labels:
+          application: 'puzzle'
+          service: 'blog-service'
+
+  - job_name: 'puzzle-notification-service'
+    static_configs:
+      - targets: ['puzzle-notification-service:8004']
+        labels:
+          application: 'puzzle'
+          service: 'notification-service'
+
+  # ---------------------------------------------------------------------------
+  # INFRASTRUCTURE SERVICES
+  # ---------------------------------------------------------------------------
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['ronak-verse-postgres-exporter:9187']
+        labels:
+          application: 'infrastructure'
+          service: 'postgres'
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['ronak-verse-redis-exporter:9121']
+        labels:
+          application: 'infrastructure'
+          service: 'redis'
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['ronak-verse-rabbitmq:15692']
+        labels:
+          application: 'infrastructure'
+          service: 'rabbitmq'
+
+  # ---------------------------------------------------------------------------
+  # OBSERVABILITY STACK (self-monitoring)
+  # ---------------------------------------------------------------------------
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          application: 'observability'
+          service: 'prometheus'
+
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['ronak-verse-grafana:3000']
+        labels:
+          application: 'observability'
+          service: 'grafana'
+
+  # ---------------------------------------------------------------------------
+  # EXISTING SERVICES (Gateway, Portfolio, etc.)
+  # ---------------------------------------------------------------------------
+  # Add these when existing services are instrumented with metrics
+
+  # - job_name: 'gateway-site'
+  #   static_configs:
+  #     - targets: ['gateway:8000']
+  #       labels:
+  #         application: 'gateway'
+  #         service: 'web'
+
+  # - job_name: 'portfolio'
+  #   static_configs:
+  #     - targets: ['portfolio:8003']
+  #       labels:
+  #         application: 'portfolio'
+  #         service: 'web'
+
+# =============================================================================
+# NOTES
+# =============================================================================
+# - Each target must expose a /metrics endpoint
+# - Targets are resolved via Docker DNS (container names)
+# - Labels allow filtering in Grafana queries
+# - Scrape interval determines metric freshness vs. resource usage
