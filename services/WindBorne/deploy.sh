@@ -16,7 +16,7 @@ echo ""
 # ------------------------------------------------------------------------------
 # Configuration
 # ------------------------------------------------------------------------------
-REPO_URL="https://github.com/Ronak-Malkan/windborne-coverage-analyzer.git"
+REPO_URL="https://github.com/Ronak-Malkan/Windborne-Coverage-Analysis.git"
 APP_DIR="/root/windborne-coverage-analyzer"
 CONTAINER_NAME="windborne-coverage"
 IMAGE_NAME="windborne-coverage"
