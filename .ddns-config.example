@@ -1,0 +1,46 @@
+# Cloudflare DDNS Configuration
+#
+# Copy this file to ~/.ddns-config and fill in your actual values
+#
+#   cp .ddns-config.example ~/.ddns-config
+#   chmod 600 ~/.ddns-config
+#   nano ~/.ddns-config
+#
+# IMPORTANT: Never commit the actual .ddns-config file (it's in .gitignore)
+
+# Cloudflare API Token
+# How to get: https://dash.cloudflare.com/profile/api-tokens
+# Required permissions: Zone.DNS (Edit)
+CF_API_TOKEN="your-cloudflare-api-token-here"
+
+# Cloudflare Zone ID
+# How to get:
+#   1. Go to https://dash.cloudflare.com
+#   2. Select your domain (ronakverse.net)
+#   3. Scroll down in Overview tab to find "Zone ID" in the right sidebar
+CF_ZONE_ID="your-cloudflare-zone-id-here"
+
+# DNS Record ID for Root Domain (ronakverse.net)
+# How to get:
+#   1. Go to DNS tab in Cloudflare dashboard
+#   2. Use the Cloudflare API to list records:
+#      curl -X GET "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records?type=A&name=ronakverse.net" \
+#           -H "Authorization: Bearer YOUR_API_TOKEN" \
+#           -H "Content-Type: application/json"
+#   3. Copy the "id" field from the response
+CF_RECORD_ID_ROOT="record-id-for-ronakverse.net"
+
+# DNS Record ID for Wildcard Domain (*.ronakverse.net)
+# How to get:
+#   Same as above, but use name=*.ronakverse.net in the API call:
+#      curl -X GET "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records?type=A&name=*.ronakverse.net" \
+#           -H "Authorization: Bearer YOUR_API_TOKEN" \
+#           -H "Content-Type: application/json"
+CF_RECORD_ID_WILDCARD="record-id-for-*.ronakverse.net"
+
+# Your Domain Name
+DOMAIN="ronakverse.net"
+
+# Log File Location (optional, defaults to /var/log/ddns.log)
+# Note: Script uses sudo to write to this file
+# LOG_FILE="/var/log/ddns.log"
