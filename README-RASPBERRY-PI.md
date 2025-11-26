@@ -22,7 +22,7 @@ Complete guide for deploying RonakVerse infrastructure on Raspberry Pi 5 at home
 
 ## Overview
 
-This branch (`raspberry-pi`) contains deployment scripts optimized for Raspberry Pi 5 running at home behind a NAT router. The main differences from the Digital Ocean deployment (on `main` branch) are:
+This branch (`raspberry-pi`) contains deployment scripts optimized for Raspberry Pi 5 running at my home behind a NAT router. The main differences from the Digital Ocean deployment (on `main` branch) are:
 
 - **Dynamic IP management** using Cloudflare DDNS
 - **Cloudflare DNS-01 SSL challenges** (works behind NAT)
@@ -36,11 +36,11 @@ This branch (`raspberry-pi`) contains deployment scripts optimized for Raspberry
 ### ✅ Already Completed (Before Starting)
 
 - [x] Raspberry Pi 5 with Raspberry Pi OS installed
-- [x] Static local IP configured: `192.168.1.50`
+- [x] Static local IP configured
 - [x] Router port forwarding configured:
-  - Port 22 (SSH) → 192.168.1.50
-  - Port 80 (HTTP) → 192.168.1.50
-  - Port 443 (HTTPS) → 192.168.1.50
+  - Port 22 (SSH)
+  - Port 80 (HTTP)
+  - Port 443 (HTTPS)
 - [x] UFW firewall active (allows 22, 80, 443)
 - [x] SSH key-based authentication enabled
 - [x] User account with sudo access
@@ -61,10 +61,12 @@ This branch (`raspberry-pi`) contains deployment scripts optimized for Raspberry
 ### 1. Dynamic IP Problem
 
 **Digital Ocean:**
+
 - Static public IP that never changes
 - Set DNS once, works forever
 
 **Raspberry Pi:**
+
 - Home ISP assigns dynamic IP
 - IP can change every few days/weeks
 - **Solution:** Cloudflare DDNS runs every 5 minutes to auto-update DNS
@@ -72,10 +74,12 @@ This branch (`raspberry-pi`) contains deployment scripts optimized for Raspberry
 ### 2. SSL Certificate Acquisition
 
 **Digital Ocean:**
+
 - Uses DigitalOcean DNS-01 challenge
 - Requires DigitalOcean API token
 
 **Raspberry Pi:**
+
 - Uses Cloudflare DNS-01 challenge
 - Requires Cloudflare API token
 - Works behind NAT (no port 80 needed during renewal)
@@ -84,10 +88,12 @@ This branch (`raspberry-pi`) contains deployment scripts optimized for Raspberry
 ### 3. Network Topology
 
 **Digital Ocean:**
+
 - Direct internet access
 - Public IP directly on server
 
 **Raspberry Pi:**
+
 - Behind NAT router
 - Port forwarding required
 - Public IP changes periodically
@@ -95,10 +101,12 @@ This branch (`raspberry-pi`) contains deployment scripts optimized for Raspberry
 ### 4. Resource Availability
 
 **Digital Ocean:**
+
 - 1GB RAM (strict limits)
 - Resource-constrained
 
 **Raspberry Pi:**
+
 - 8GB RAM available
 - Can use more generous limits (optional)
 
@@ -170,6 +178,7 @@ chmod +x basic-config.sh
 ```
 
 **What it does:**
+
 - Updates system packages
 - Installs UFW firewall (or verifies existing configuration)
 - Installs fail2ban
@@ -230,6 +239,7 @@ chmod +x basic-config.sh
 Use the Cloudflare API to get record IDs:
 
 **Get root domain record ID:**
+
 ```bash
 curl -X GET "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records?type=A&name=ronakverse.net" \
      -H "Authorization: Bearer YOUR_API_TOKEN" \
@@ -239,6 +249,7 @@ curl -X GET "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records
 Look for `"id": "..."` in the response and copy it.
 
 **Get wildcard record ID:**
+
 ```bash
 curl -X GET "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records?type=A&name=*.ronakverse.net" \
      -H "Authorization: Bearer YOUR_API_TOKEN" \
@@ -257,6 +268,7 @@ nano ~/.ddns-config
 ```
 
 Fill in your actual values:
+
 ```bash
 CF_API_TOKEN="your-actual-api-token-here"
 CF_ZONE_ID="your-actual-zone-id-here"
@@ -282,27 +294,32 @@ nano .env
 ```
 
 Generate secure passwords:
+
 ```bash
 openssl rand -base64 32
 ```
 
 Update `.env` with strong passwords:
+
 ```
 POSTGRES_PASSWORD=your_secure_postgres_password
 RABBITMQ_PASSWORD=your_secure_rabbitmq_password
 ```
 
 Deploy:
+
 ```bash
 ./deploy.sh
 ```
 
 **Verify:**
+
 ```bash
 docker ps | grep ronak-verse
 ```
 
 You should see:
+
 - `ronak-verse-postgres`
 - `ronak-verse-redis`
 - `ronak-verse-rabbitmq`
@@ -316,22 +333,26 @@ nano .env
 ```
 
 Update `.env`:
+
 ```
 GRAFANA_PASSWORD=your_secure_grafana_password
 POSTGRES_PASSWORD=same_as_database_env
 ```
 
 Deploy:
+
 ```bash
 ./deploy.sh
 ```
 
 **Verify:**
+
 ```bash
 docker ps | grep ronak-verse
 ```
 
 You should see:
+
 - `ronak-verse-prometheus`
 - `ronak-verse-grafana`
 - `ronak-verse-loki`
@@ -353,6 +374,7 @@ cd /home/ronakmalkan/Ronak-Verse
 ```
 
 **What it does:**
+
 1. Makes all scripts executable
 2. Runs `basic-config.sh` (idempotent)
 3. Deploys all application services:
@@ -375,6 +397,7 @@ cd services/Puzzle
 ```
 
 **Verify all services:**
+
 ```bash
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
@@ -393,6 +416,7 @@ sudo ./getSSL-pi.sh
 ```
 
 **What it does:**
+
 1. Installs certbot with Cloudflare DNS plugin
 2. Uses your `~/.ddns-config` for Cloudflare API access
 3. Obtains wildcard certificate: `*.ronakverse.net`
@@ -412,6 +436,7 @@ sudo systemctl restart nginx
 ```
 
 **Verify SSL:**
+
 ```bash
 curl -I https://ronakverse.net
 ```
@@ -430,7 +455,9 @@ cd /home/ronakmalkan/Ronak-Verse
 ```
 
 **What it sets up:**
+
 1. **DDNS Updater:** Runs every 5 minutes
+
    - Checks if public IP changed
    - Updates Cloudflare DNS if needed
    - Logs to `/var/log/ddns.log`
@@ -441,11 +468,13 @@ cd /home/ronakmalkan/Ronak-Verse
    - Reloads Nginx automatically
 
 **Verify cron jobs:**
+
 ```bash
 crontab -l
 ```
 
 **Verify certbot timer:**
+
 ```bash
 systemctl status certbot.timer
 ```
@@ -461,16 +490,19 @@ Run through this checklist to verify everything works:
 #### Infrastructure
 
 - [ ] All Docker containers running:
+
   ```bash
   docker ps | wc -l  # Should show 15+ containers
   ```
 
 - [ ] PostgreSQL accessible:
+
   ```bash
   docker exec ronak-verse-postgres pg_isready
   ```
 
 - [ ] Redis accessible:
+
   ```bash
   docker exec ronak-verse-redis redis-cli ping
   ```
@@ -483,11 +515,13 @@ Run through this checklist to verify everything works:
 #### DDNS
 
 - [ ] DDNS script works:
+
   ```bash
   ./ddns-cloudflare.sh
   ```
 
 - [ ] Check DDNS log:
+
   ```bash
   sudo tail -f /var/log/ddns.log
   ```
@@ -502,11 +536,13 @@ Run through this checklist to verify everything works:
 #### SSL Certificates
 
 - [ ] Certificates exist:
+
   ```bash
   sudo ls -la /etc/letsencrypt/live/ronakverse.net/
   ```
 
 - [ ] Check certificate expiry:
+
   ```bash
   sudo certbot certificates
   ```
@@ -529,6 +565,7 @@ Test all services via HTTPS:
 - [ ] Grafana: https://metrics.ronakverse.net
 
 **All should:**
+
 - Load without certificate warnings
 - Show valid SSL lock icon
 - Return HTTP/2 (check with: `curl -I https://domain`)
@@ -587,18 +624,21 @@ sudo fail2ban-client status
 ### Manual Operations
 
 **Manually trigger DDNS update:**
+
 ```bash
 cd /home/ronakmalkan/Ronak-Verse
 ./ddns-cloudflare.sh
 ```
 
 **Manually renew SSL certificates:**
+
 ```bash
 sudo certbot renew
 sudo systemctl reload nginx
 ```
 
 **View all logs:**
+
 ```bash
 # DDNS log
 sudo tail -f /var/log/ddns.log
@@ -612,6 +652,7 @@ docker logs -f container_name
 ```
 
 **Restart all services:**
+
 ```bash
 cd /home/ronakmalkan/Ronak-Verse/database
 docker-compose restart
@@ -630,10 +671,12 @@ docker restart gateway portfolio twocars typeittoloseit windborne-coverage
 ### Issue: DDNS not updating DNS
 
 **Symptoms:**
+
 - Public IP changed but DNS still points to old IP
 - DDNS script shows errors in log
 
 **Check:**
+
 ```bash
 # Test DDNS script manually
 ./ddns-cloudflare.sh
@@ -650,6 +693,7 @@ curl -X GET "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID" \
 ```
 
 **Solutions:**
+
 - Verify API token is still valid (check Cloudflare dashboard)
 - Check API token has DNS edit permissions
 - Ensure Zone ID and Record IDs are correct
@@ -658,10 +702,12 @@ curl -X GET "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID" \
 ### Issue: SSL certificates not renewing
 
 **Symptoms:**
+
 - Certificate expired or about to expire
 - Certbot renewal fails
 
 **Check:**
+
 ```bash
 # Check certificate expiry
 sudo certbot certificates
@@ -674,6 +720,7 @@ systemctl status certbot.timer
 ```
 
 **Solutions:**
+
 - Ensure Cloudflare API token is valid
 - Check `/etc/letsencrypt/cloudflare.ini` exists and has correct token
 - Manually renew: `sudo certbot renew --force-renewal`
@@ -682,10 +729,12 @@ systemctl status certbot.timer
 ### Issue: Website not accessible from internet
 
 **Symptoms:**
+
 - Can access locally (http://192.168.1.50) but not via domain
 - Connection timeout from external network
 
 **Check:**
+
 ```bash
 # Check public IP
 curl -4 ifconfig.me
@@ -698,6 +747,7 @@ dig +short ronakverse.net
 ```
 
 **Solutions:**
+
 - Verify DNS points to current public IP
 - Check router port forwarding rules (22, 80, 443 → 192.168.1.50)
 - Verify UFW firewall allows ports: `sudo ufw status`
@@ -707,10 +757,12 @@ dig +short ronakverse.net
 ### Issue: Docker containers keep restarting
 
 **Symptoms:**
+
 - Containers show "Restarting" status
 - Services not accessible
 
 **Check:**
+
 ```bash
 # Check container status
 docker ps -a
@@ -727,6 +779,7 @@ df -h
 ```
 
 **Solutions:**
+
 - Check for port conflicts: `sudo netstat -tlnp`
 - Verify environment variables in `.env` files
 - Check Docker logs for specific errors
@@ -736,10 +789,12 @@ df -h
 ### Issue: Service shows "502 Bad Gateway"
 
 **Symptoms:**
+
 - Nginx returns 502 error
 - Service container is running
 
 **Check:**
+
 ```bash
 # Check if service container is healthy
 docker ps | grep service_name
@@ -755,6 +810,7 @@ curl http://localhost:SERVICE_PORT
 ```
 
 **Solutions:**
+
 - Verify service is listening on correct port
 - Check service health endpoint
 - Restart service container: `docker restart service_name`
@@ -764,10 +820,12 @@ curl http://localhost:SERVICE_PORT
 ### Issue: Grafana not showing data
 
 **Symptoms:**
+
 - Grafana accessible but no metrics/logs
 - Dashboards show "No data"
 
 **Check:**
+
 ```bash
 # Check Prometheus targets
 # Open: http://192.168.1.50:9090/targets
@@ -783,6 +841,7 @@ docker ps | grep exporter
 ```
 
 **Solutions:**
+
 - Verify Prometheus is scraping targets
 - Check data source URLs in Grafana
 - Restart observability stack:
@@ -795,11 +854,13 @@ docker ps | grep exporter
 ### Issue: Out of disk space
 
 **Symptoms:**
+
 - Services failing
 - Cannot pull Docker images
 - Logs full
 
 **Check:**
+
 ```bash
 # Check disk usage
 df -h
@@ -812,6 +873,7 @@ sudo du -sh /var/log/*
 ```
 
 **Solutions:**
+
 ```bash
 # Clean Docker images
 docker system prune -a -f
@@ -847,6 +909,7 @@ You now have a fully automated home server deployment with:
 - ✅ Production-ready infrastructure
 
 **Key Files:**
+
 - `~/.ddns-config` - DDNS credentials (keep secure)
 - `database/.env` - Database passwords (keep secure)
 - `observability/.env` - Grafana password (keep secure)
@@ -854,6 +917,7 @@ You now have a fully automated home server deployment with:
 - `/etc/letsencrypt/live/ronakverse.net/` - SSL certificates
 
 **Maintenance Schedule:**
+
 - Automatic: DDNS (every 5 min), SSL renewal (twice daily)
 - Weekly: Check logs and certificate expiry
 - Monthly: System updates and cleanup
