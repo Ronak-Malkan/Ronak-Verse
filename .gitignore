@@ -1,0 +1,49 @@
+# Environment and Configuration Files (contain secrets)
+.env
+*.env
+!*.env.example
+
+# Cloudflare DDNS Configuration (contains API tokens)
+.ddns-config
+~/.ddns-config
+
+# Runtime State Files
+/tmp/last_ip.txt
+last_ip.txt
+
+# SSL/Certificate Files
+/etc/letsencrypt/
+*.pem
+*.key
+*.crt
+*.csr
+cloudflare.ini
+
+# Logs
+*.log
+logs/
+/var/log/
+
+# Docker
+docker-compose.override.yml
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup Files
+*.bak
+*.backup
+*.old
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
