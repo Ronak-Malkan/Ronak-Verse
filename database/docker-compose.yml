@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # =============================================================================
 # Ronak-Verse Shared Database Infrastructure
@@ -30,16 +30,16 @@ services:
       - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
     command: >
       postgres
-      -c max_connections=50
-      -c shared_buffers=128MB
-      -c effective_cache_size=256MB
-      -c work_mem=2MB
-      -c maintenance_work_mem=32MB
+      -c max_connections=100
+      -c shared_buffers=512MB
+      -c effective_cache_size=2GB
+      -c work_mem=8MB
+      -c maintenance_work_mem=128MB
       -c random_page_cost=1.1
       -c effective_io_concurrency=200
-      -c wal_buffers=4MB
+      -c wal_buffers=16MB
       -c min_wal_size=1GB
-      -c max_wal_size=2GB
+      -c max_wal_size=4GB
     networks:
       - ronak-verse-network
     healthcheck:
@@ -51,9 +51,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200M
+          memory: 1GB  # Increased for Raspberry Pi (8GB RAM available)
         reservations:
-          memory: 150M
+          memory: 512M
 
   # ===========================================================================
   # Redis - Shared Cache and Session Store
@@ -65,7 +65,7 @@ services:
       - "6379:6379"
     command: >
       redis-server
-      --maxmemory 50mb
+      --maxmemory 256mb
       --maxmemory-policy allkeys-lru
       --save 60 1000
       --appendonly yes
@@ -83,20 +83,18 @@ services:
     deploy:
       resources:
         limits:
-          memory: 50M
+          memory: 256M  # Increased for Raspberry Pi (8GB RAM available)
         reservations:
-          memory: 30M
+          memory: 128M
 
-  # ===========================================================================
   # RabbitMQ - Shared Message Queue
-  # ===========================================================================
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: ronak-verse-rabbitmq
     ports:
-      - "5672:5672"    # AMQP protocol
-      - "15672:15672"  # Management UI
-      - "15692:15692"  # Prometheus metrics
+      - "5672:5672" # AMQP protocol
+      - "15672:15672" # Management UI
+      - "15692:15692" # Prometheus metrics
     environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
@@ -114,16 +112,16 @@ services:
     deploy:
       resources:
         limits:
-          memory: 80M
+          memory: 256M # Increased for Raspberry Pi (8GB RAM available)
         reservations:
-          memory: 50M
+          memory: 128M
 
 # =============================================================================
 # NETWORKS
 # =============================================================================
 networks:
   ronak-verse-network:
-    external: true  # Must be created manually: docker network create ronak-verse-network
+    external: true # Must be created manually: docker network create ronak-verse-network
 
 # =============================================================================
 # VOLUMES
@@ -135,7 +133,6 @@ volumes:
     driver: local
   rabbitmq_data:
     driver: local
-
 # =============================================================================
 # USAGE
 # =============================================================================

@@ -36,9 +36,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 50M
+          memory: 512M  # Increased for Raspberry Pi (8GB RAM available)
         reservations:
-          memory: 30M
+          memory: 256M
 
   # ===========================================================================
   # GRAFANA - Dashboards and Visualization
@@ -67,9 +67,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 50M
+          memory: 256M  # Increased for Raspberry Pi (8GB RAM available)
         reservations:
-          memory: 30M
+          memory: 128M
 
   # ===========================================================================
   # LOKI - Log Aggregation
@@ -89,9 +89,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 40M
+          memory: 256M  # Increased for Raspberry Pi (8GB RAM available)
         reservations:
-          memory: 25M
+          memory: 128M
 
   # ===========================================================================
   # PROMTAIL - Log Shipper
@@ -127,9 +127,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 20M
+          memory: 64M  # Increased for Raspberry Pi (8GB RAM available)
         reservations:
-          memory: 10M
+          memory: 32M
 
   # ===========================================================================
   # REDIS EXPORTER - Redis Metrics
@@ -147,9 +147,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 20M
+          memory: 64M  # Increased for Raspberry Pi (8GB RAM available)
         reservations:
-          memory: 10M
+          memory: 32M
 
 # =============================================================================
 # NETWORKS
