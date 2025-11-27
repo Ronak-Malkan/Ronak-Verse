@@ -339,7 +339,9 @@ GRAFANA_PASSWORD=your_secure_grafana_password
 POSTGRES_PASSWORD=same_as_database_env
 ```
 
+gNpiDo1+kt/U2bMBFLt9gJMNB8VtE9lFeX4eAj2P+88=
 Deploy:
+9dujXOT8nNkHInieCXUPpGsDGQMstanOoeZYDDrl22o=
 
 ```bash
 ./deploy.sh
