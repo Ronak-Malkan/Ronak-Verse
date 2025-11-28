@@ -24,7 +24,14 @@ echo ""
 # Configuration
 DOMAIN="ronakverse.net"
 CLOUDFLARE_INI="/etc/letsencrypt/cloudflare.ini"
-CONFIG_FILE="${HOME}/.ddns-config"
+
+# Get the actual user's home directory (when run with sudo)
+if [ -n "$SUDO_USER" ]; then
+    ACTUAL_USER_HOME=$(eval echo ~$SUDO_USER)
+else
+    ACTUAL_USER_HOME="$HOME"
+fi
+CONFIG_FILE="${ACTUAL_USER_HOME}/.ddns-config"
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then

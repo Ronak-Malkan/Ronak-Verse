@@ -364,49 +364,9 @@ You should see:
 
 ---
 
-## Service Deployment
-
-### Deploy All Services
-
-From the repository root:
-
-```bash
-cd /home/ronakmalkan/Ronak-Verse
-./init.sh
-```
-
-**What it does:**
-
-1. Makes all scripts executable
-2. Runs `basic-config.sh` (idempotent)
-3. Deploys all application services:
-   - Gateway (ronakverse.net)
-   - Portfolio (portfolio.ronakverse.net)
-   - TwoCars (twocars.ronakverse.net)
-   - TypeIt (typeit.ronakverse.net)
-   - WindBorne (windborne.ronakverse.net)
-4. Configures Nginx reverse proxy
-
-**Time:** ~10-15 minutes
-
-### Deploy Puzzle Microservices (Separate)
-
-Puzzle has multiple microservices and requires database:
-
-```bash
-cd services/Puzzle
-./deploy.sh
-```
-
-**Verify all services:**
-
-```bash
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-```
-
----
-
 ## SSL Certificate Setup
+
+⚠️ **IMPORTANT:** Obtain SSL certificates BEFORE deploying services and configuring Nginx!
 
 ### Obtain Wildcard Certificate
 
@@ -429,12 +389,58 @@ sudo ./getSSL-pi.sh
 
 **Time:** ~3-5 minutes
 
-### Restart Nginx
-
-After obtaining certificates:
+**Verify certificates exist:**
 
 ```bash
-sudo systemctl restart nginx
+sudo ls -la /etc/letsencrypt/live/ronakverse.net/
+```
+
+You should see:
+- `fullchain.pem`
+- `privkey.pem`
+- `cert.pem`
+- `chain.pem`
+
+---
+
+## Service Deployment
+
+### Deploy All Services
+
+From the repository root:
+
+```bash
+cd /home/ronakmalkan/Ronak-Verse
+./init.sh
+```
+
+**What it does:**
+
+1. Makes all scripts executable
+2. Runs `basic-config.sh` (idempotent)
+3. Deploys all application services:
+   - Gateway (ronakverse.net)
+   - Portfolio (portfolio.ronakverse.net)
+   - TwoCars (twocars.ronakverse.net)
+   - TypeIt (typeit.ronakverse.net)
+   - WindBorne (windborne.ronakverse.net)
+4. Configures Nginx reverse proxy (requires SSL certificates from previous step)
+
+**Time:** ~10-15 minutes
+
+### Deploy Puzzle Microservices (Separate)
+
+Puzzle has multiple microservices and requires database:
+
+```bash
+cd services/Puzzle
+./deploy.sh
+```
+
+**Verify all services:**
+
+```bash
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
 
 **Verify SSL:**
