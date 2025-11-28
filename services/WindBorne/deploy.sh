@@ -17,7 +17,7 @@ echo ""
 # Configuration
 # ------------------------------------------------------------------------------
 REPO_URL="https://github.com/Ronak-Malkan/Windborne-Coverage-Analysis.git"
-APP_DIR="/root/windborne-coverage-analyzer"
+APP_DIR="$HOME/windborne-coverage-analyzer"
 CONTAINER_NAME="windborne-coverage"
 IMAGE_NAME="windborne-coverage"
 PORT=3005  # External port (nginx will proxy to this)

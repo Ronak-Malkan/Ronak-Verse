@@ -20,8 +20,11 @@ sudo chown -R www-data:www-data /var/www/ronakverse.net
 # NGINX configuration for the main domain and services
 echo "Creating NGINX configurations..."
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Path to the main Nginx configuration file
-NGINX_CONF="/root/Ronak-Verse/nginx.conf"
+NGINX_CONF="$SCRIPT_DIR/nginx.conf"
 NGINX_AVAILABLE="/etc/nginx/sites-available/ronakverse.net"
 NGINX_ENABLED="/etc/nginx/sites-enabled/ronakverse.net"
 
